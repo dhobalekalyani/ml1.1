@@ -1,0 +1,54 @@
+# Import the necessary libraries:
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
+
+# Load the dataset and perform data cleaning:
+url = 'https://raw.githubusercontent.com/edyoda/data-science-complete-tutorial/master/Data/house_rental_data.csv.txt'
+df = pd.read_csv(url)
+
+# Drop irrelevant columns that are not useful for clustering
+df.drop(['Unnamed: 0', 'sqft', 'nonsmoker', 'waterbill', 'bachelorsallowed'], axis=1, inplace=True)
+
+# Drop any rows with missing values
+df.dropna(inplace=True)
+
+# Prepare the data for clustering:
+# Select relevant features for clustering
+X = df[['area', 'bhk', 'price']]
+
+# Standardize the data to have zero mean and unit variance
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Finding the optimal value of k:
+# Use the elbow method to find the optimal value of k
+sse = []
+k_values = range(1, 11)
+
+for k in k_values:
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    kmeans.fit(X_scaled)
+    sse.append(kmeans.inertia_)
+
+# Plot the sum of squared errors (SSE) for different values of k
+plt.plot(k_values, sse, 'bo-')
+plt.xlabel('Number of Clusters (k)')
+plt.ylabel('Sum of Squared Errors (SSE)')
+plt.title('Elbow Method')
+plt.show()
+
+# Choose the optimal value of k and perform clustering:
+# Based on the elbow method, select the optimal value of k
+optimal_k = 3
+
+# Perform K-means clustering with the optimal value of k
+kmeans = KMeans(n_clusters=optimal_k, random_state=42)
+kmeans.fit(X_scaled)
+
+# Assign cluster labels to each data point
+cluster_labels = kmeans.labels_
+
+# Add the cluster labels to the original dataframe
+df['cluster'] = cluster_labels
